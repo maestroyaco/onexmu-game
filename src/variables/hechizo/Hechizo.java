@@ -194,7 +194,7 @@ public class Hechizo {
 	final ArrayList<EfectoHechizo> efectosH, final TipoDaño tipo, final boolean esGC) {
 		int cantObjetivos = aplicaHechizoAPeleaSinGTM(pelea, lanzador, celdaObj, efectosH, tipo, esGC);
 		if (cantObjetivos > 0) {
-			GestorSalida.ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(pelea, 7, true);
+			GestorSalida.ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(pelea, 7,  false);
 		}
 	}
 	

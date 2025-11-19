@@ -417,12 +417,12 @@ public class GestorSalida {
 		imprimir("CARGANDO MAPA: PERSO", packet);
 	}
 	
-	public static void ENVIAR_GDM_CAMBIO_DE_MAPA(final Personaje perso, Mapa mapa) {
-		perso.setCargandoMapa(true, null);
-		perso.setMapaGDM(mapa);
-		final String packet = "GDM|" + mapa.getID() + "|" + mapa.getFecha() + "|";
-		enviar(perso, packet);
-		imprimir("CAMBIO MAPA: PERSO", packet);
+	public static void ENVIAR_GDM_CAMBIO_DE_MAPA(final Personaje perso, Mapa mapa) {  
+	    perso.setCargandoMapa(true, null);  
+	    perso.setMapaGDM(mapa);  
+	    final String packet = "GDM|" + mapa.getID() + "|" + mapa.getFecha() + "|" + mapa.getKey();  
+	    enviar(perso, packet);  
+	    imprimir("CAMBIO MAPA: PERSO", packet);  
 	}
 	
 	public static void ENVIAR_GDM_MAPDATA_COMPLETO(final Personaje perso) {
@@ -937,141 +937,170 @@ public class GestorSalida {
 		imprimir("IDS MODO CRIATURA: PERSO", packet);
 	}
 	
-	public static void ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(final Pelea pelea, final int equipos,
-	boolean como999) {
-		ArrayList<Luchador> aEnviar = pelea.luchadoresDeEquipo(equipos);
-		for (final Luchador luchador : pelea.luchadoresDeEquipo(3)) {
-			final TotalStats totalStats = luchador.getTotalStats();
-			final StringBuilder packet1 = new StringBuilder();
-			final StringBuilder packet2 = new StringBuilder();
-			packet1.append("|" + luchador.getID() + ";");
-			if (luchador.estaMuerto()) {
-				packet1.append(1 + ";");
-			} else {
-				if (como999 && !luchador.getUpdateGTM()) {
-					continue;
-				}
-				packet1.append(0 + ";");
-				packet1.append(luchador.getPDVConBuff() + ";");
-				packet1.append(Math.max(0, luchador.getPARestantes()) + ";");
-				packet1.append(Math.max(0, luchador.getPMRestantes()) + ";");// PM
-				packet2.append(";");
-				packet2.append(luchador.getPDVMaxConBuff() + ";");
-				packet2.append(totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_HUIDA) + ";");
-				packet2.append(totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_PLACAJE) + ";");
-				int[] resist = new int[7];
-				switch (pelea.getTipoPelea()) {
-					case Constantes.PELEA_TIPO_DESAFIO :
-					case Constantes.PELEA_TIPO_KOLISEO :
-					case Constantes.PELEA_TIPO_PVP :
-					case Constantes.PELEA_TIPO_RECAUDADOR :
-						resist[0] = Constantes.STAT_MAS_RES_PORC_PVP_NEUTRAL;
-						resist[1] = Constantes.STAT_MAS_RES_PORC_PVP_TIERRA;
-						resist[2] = Constantes.STAT_MAS_RES_PORC_PVP_FUEGO;
-						resist[3] = Constantes.STAT_MAS_RES_PORC_PVP_AGUA;
-						resist[4] = Constantes.STAT_MAS_RES_PORC_PVP_AIRE;
-						break;
-					default :
-						resist[0] = Constantes.STAT_MAS_RES_PORC_NEUTRAL;
-						resist[1] = Constantes.STAT_MAS_RES_PORC_TIERRA;
-						resist[2] = Constantes.STAT_MAS_RES_PORC_FUEGO;
-						resist[3] = Constantes.STAT_MAS_RES_PORC_AGUA;
-						resist[4] = Constantes.STAT_MAS_RES_PORC_AIRE;
-						break;
-				}
-				resist[5] = Constantes.STAT_MAS_ESQUIVA_PERD_PA;
-				resist[6] = Constantes.STAT_MAS_ESQUIVA_PERD_PM;
-				for (int statID : resist) {
-					int total = totalStats.getTotalStatConComplemento(statID);
-					packet2.append(total + ",");
-				}
-				luchador.setUpdateGTM(false);
-			}
-			for (final Luchador enviar : aEnviar) {
-				if (enviar.estaRetirado() || enviar.getPersonaje() == null || enviar.esMultiman()) {
-					continue;
-				}
-				enviar.getStringBuilderGTM().append(packet1.toString());
-				if (!luchador.estaMuerto()) {
-					enviar.getStringBuilderGTM().append((luchador.getCeldaPelea() == null || luchador.esInvisible(enviar.getID())
-					? "-1"
-					: luchador.getCeldaPelea().getID()) + ";" + packet2.toString());
-				}
-			}
-		}
-		for (final Luchador enviar : aEnviar) {
-			if (enviar.estaRetirado() || enviar.getPersonaje() == null || enviar.esMultiman()) {
-				continue;
-			}
-			if (enviar.getStringBuilderGTM().toString().isEmpty()) {
-				continue;
-			}
-			String packet = "";
-			if (como999) {
-				packet += "GA;999;;" + "GTU";
-			} else {
-				packet += "GTM";
-			}
-			packet += enviar.getStringBuilderGTM().toString();
-			enviar.resetStringBuilderGTM();
-			enviarEnCola(enviar.getPersonaje(), packet, true);
-			imprimir("INFO STATS LUCH: PERSO " + enviar.getID() + "", packet);
-		}
+	public static void ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(final Pelea pelea, final int equipos, boolean como999) {
+	    ArrayList<Luchador> aEnviar = pelea.luchadoresDeEquipo(equipos);
+	    for (final Luchador luchador : pelea.luchadoresDeEquipo(3)) {
+	        final TotalStats totalStats = luchador.getTotalStats();
+	        final StringBuilder packet1 = new StringBuilder();
+	        final StringBuilder packet2 = new StringBuilder();
+	        packet1.append("|" + luchador.getID() + ";");
+
+	        if (luchador.estaMuerto()) {
+	            packet1.append(1 + ";");
+	        } else {
+	            if (como999 && !luchador.getUpdateGTM()) {
+	                continue;
+	            }
+
+	            packet1.append(0 + ";");
+	            packet1.append(luchador.getPDVConBuff() + ";");
+	            packet1.append(Math.max(0, luchador.getPARestantes()) + ";");
+	            packet1.append(Math.max(0, luchador.getPMRestantes()) + ";"); // PM actuales
+
+	            //packet2.append(";"); // comentado compatibilidad 1.43.7   
+	            packet2.append(luchador.getPDVMaxConBuff() + ";");
+
+	            // === NUEVO ORDEN: primero APinit / MPinit ===
+	            packet2.append(totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PA) + ";"); // APinit
+	            packet2.append(totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PM) + ";"); // MPinit
+
+	            // === Luego las resistencias ===
+	            int[] resist = new int[7];
+	            switch (pelea.getTipoPelea()) {
+	                case Constantes.PELEA_TIPO_DESAFIO:
+	                case Constantes.PELEA_TIPO_KOLISEO:
+	                case Constantes.PELEA_TIPO_PVP:
+	                case Constantes.PELEA_TIPO_RECAUDADOR:
+	                    resist[0] = Constantes.STAT_MAS_RES_PORC_PVP_NEUTRAL;
+	                    resist[1] = Constantes.STAT_MAS_RES_PORC_PVP_TIERRA;
+	                    resist[2] = Constantes.STAT_MAS_RES_PORC_PVP_FUEGO;
+	                    resist[3] = Constantes.STAT_MAS_RES_PORC_PVP_AGUA;
+	                    resist[4] = Constantes.STAT_MAS_RES_PORC_PVP_AIRE;
+	                    break;
+	                default:
+	                    resist[0] = Constantes.STAT_MAS_RES_PORC_NEUTRAL;
+	                    resist[1] = Constantes.STAT_MAS_RES_PORC_TIERRA;
+	                    resist[2] = Constantes.STAT_MAS_RES_PORC_FUEGO;
+	                    resist[3] = Constantes.STAT_MAS_RES_PORC_AGUA;
+	                    resist[4] = Constantes.STAT_MAS_RES_PORC_AIRE;
+	                    break;
+	            }
+	            resist[5] = Constantes.STAT_MAS_ESQUIVA_PERD_PA;
+	            resist[6] = Constantes.STAT_MAS_ESQUIVA_PERD_PM;
+
+	            for (int statID : resist) {
+	                int total = totalStats.getTotalStatConComplemento(statID);
+	                packet2.append(total + ",");
+	            }
+
+	            luchador.setUpdateGTM(false);
+	        }
+
+	        for (final Luchador enviar : aEnviar) {
+	            if (enviar.estaRetirado() || enviar.getPersonaje() == null || enviar.esMultiman()) {
+	                continue;
+	            }
+	            enviar.getStringBuilderGTM().append(packet1.toString());
+	            if (!luchador.estaMuerto()) {
+	                enviar.getStringBuilderGTM().append(
+	                    (luchador.getCeldaPelea() == null || luchador.esInvisible(enviar.getID())
+	                        ? "-1"
+	                        : luchador.getCeldaPelea().getID())
+	                        + ";" + packet2.toString()
+	                );
+	            }
+	        }
+	    }
+
+	    for (final Luchador enviar : aEnviar) {
+	        if (enviar.estaRetirado() || enviar.getPersonaje() == null || enviar.esMultiman()) {
+	            continue;
+	        }
+	        if (enviar.getStringBuilderGTM().toString().isEmpty()) {
+	            continue;
+	        }
+
+	        String packet = "";
+	        if (como999) {
+	            packet += "GA;999;;GTU";
+	        } else {
+	            packet += "GTM"; // Cliente 1.43.7 espera GTM, no GA;999;;GTU
+	        }
+
+	        packet += enviar.getStringBuilderGTM().toString();
+	        enviar.resetStringBuilderGTM();
+	        enviarEnCola(enviar.getPersonaje(), packet, true);
+	        imprimir("INFO STATS LUCH: PERSO " + enviar.getID() + "", packet);
+	    }
 	}
+
 	
 	public static void ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_PERSO(final Personaje perso, final Pelea pelea) {
-		if (perso == null) {
-			return;
-		}
-		final StringBuilder packet = new StringBuilder("GTM");
-		for (final Luchador luchador : pelea.luchadoresDeEquipo(3)) {
-			final TotalStats totalStats = luchador.getTotalStats();
-			packet.append("|" + luchador.getID() + ";");
-			if (luchador.estaMuerto()) {
-				packet.append(1 + ";");
-			} else {
-				packet.append(0 + ";");
-				packet.append(luchador.getPDVConBuff() + ";");
-				packet.append(Math.max(0, luchador.getPARestantes()) + ";");
-				packet.append(Math.max(0, luchador.getPMRestantes()) + ";");// PM
-				packet.append((luchador.getCeldaPelea() == null || luchador.esInvisible(perso.getID())
-				? "-1"
-				: luchador.getCeldaPelea().getID()) + ";");
-				packet.append(";");
-				packet.append(luchador.getPDVMaxConBuff() + ";");
-				packet.append(totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_HUIDA) + ";");
-				packet.append(totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_PLACAJE) + ";");
-				int[] resist = new int[7];
-				switch (pelea.getTipoPelea()) {
-					case Constantes.PELEA_TIPO_DESAFIO :
-					case Constantes.PELEA_TIPO_KOLISEO :
-					case Constantes.PELEA_TIPO_PVP :
-					case Constantes.PELEA_TIPO_RECAUDADOR :
-						resist[0] = Constantes.STAT_MAS_RES_PORC_PVP_NEUTRAL;
-						resist[1] = Constantes.STAT_MAS_RES_PORC_PVP_TIERRA;
-						resist[2] = Constantes.STAT_MAS_RES_PORC_PVP_FUEGO;
-						resist[3] = Constantes.STAT_MAS_RES_PORC_PVP_AGUA;
-						resist[4] = Constantes.STAT_MAS_RES_PORC_PVP_AIRE;
-						break;
-					default :
-						resist[0] = Constantes.STAT_MAS_RES_PORC_NEUTRAL;
-						resist[1] = Constantes.STAT_MAS_RES_PORC_TIERRA;
-						resist[2] = Constantes.STAT_MAS_RES_PORC_FUEGO;
-						resist[3] = Constantes.STAT_MAS_RES_PORC_AGUA;
-						resist[4] = Constantes.STAT_MAS_RES_PORC_AIRE;
-						break;
-				}
-				resist[5] = Constantes.STAT_MAS_ESQUIVA_PERD_PA;
-				resist[6] = Constantes.STAT_MAS_ESQUIVA_PERD_PM;
-				for (int statID : resist) {
-					int total = totalStats.getTotalStatConComplemento(statID);
-					packet.append(total + ",");
-				}
-			}
-		}
-		enviarEnCola(perso, packet.toString(), true);
-		imprimir("INFO STATS LUCH: PERSO", packet.toString());
+	    if (perso == null) {
+	        return;
+	    }
+
+	    final StringBuilder packet = new StringBuilder("GTM");
+
+	    for (final Luchador luchador : pelea.luchadoresDeEquipo(3)) {
+	        final TotalStats totalStats = luchador.getTotalStats();
+	        packet.append("|" + luchador.getID() + ";");
+
+	        if (luchador.estaMuerto()) {
+	            packet.append(1 + ";");
+	        } else {
+	            packet.append(0 + ";");
+	            packet.append(luchador.getPDVConBuff() + ";");
+	            packet.append(Math.max(0, luchador.getPARestantes()) + ";");
+	            packet.append(Math.max(0, luchador.getPMRestantes()) + ";"); // PM actuales
+	            packet.append(
+	                (luchador.getCeldaPelea() == null || luchador.esInvisible(perso.getID())
+	                    ? "-1"
+	                    : luchador.getCeldaPelea().getID()) + ";"
+	            );
+
+	            //packet.append(";"); // comentado compatibilidad 1.43.7 
+	            packet.append(luchador.getPDVMaxConBuff() + ";");
+
+	            // === NUEVO ORDEN: APinit y MPinit antes de resistencias ===
+	            packet.append(totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PA) + ";"); // APinit
+	            packet.append(totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PM) + ";"); // MPinit
+
+	            // === Luego las resistencias ===
+	            int[] resist = new int[7];
+	            switch (pelea.getTipoPelea()) {
+	                case Constantes.PELEA_TIPO_DESAFIO:
+	                case Constantes.PELEA_TIPO_KOLISEO:
+	                case Constantes.PELEA_TIPO_PVP:
+	                case Constantes.PELEA_TIPO_RECAUDADOR:
+	                    resist[0] = Constantes.STAT_MAS_RES_PORC_PVP_NEUTRAL;
+	                    resist[1] = Constantes.STAT_MAS_RES_PORC_PVP_TIERRA;
+	                    resist[2] = Constantes.STAT_MAS_RES_PORC_PVP_FUEGO;
+	                    resist[3] = Constantes.STAT_MAS_RES_PORC_PVP_AGUA;
+	                    resist[4] = Constantes.STAT_MAS_RES_PORC_PVP_AIRE;
+	                    break;
+	                default:
+	                    resist[0] = Constantes.STAT_MAS_RES_PORC_NEUTRAL;
+	                    resist[1] = Constantes.STAT_MAS_RES_PORC_TIERRA;
+	                    resist[2] = Constantes.STAT_MAS_RES_PORC_FUEGO;
+	                    resist[3] = Constantes.STAT_MAS_RES_PORC_AGUA;
+	                    resist[4] = Constantes.STAT_MAS_RES_PORC_AIRE;
+	                    break;
+	            }
+	            resist[5] = Constantes.STAT_MAS_ESQUIVA_PERD_PA;
+	            resist[6] = Constantes.STAT_MAS_ESQUIVA_PERD_PM;
+
+	            for (int statID : resist) {
+	                int total = totalStats.getTotalStatConComplemento(statID);
+	                packet.append(total + ",");
+	            }
+	        }
+	    }
+
+	    enviarEnCola(perso, packet.toString(), true);
+	    imprimir("INFO STATS LUCH: PERSO", packet.toString());
 	}
+
 	
 	public static void ENVIAR_GTS_INICIO_TURNO_PELEA(final Pelea pelea, final int equipos, final int id,
 	final int tiempo) {

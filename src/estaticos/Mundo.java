@@ -162,7 +162,7 @@ public class Mundo {
 	public static byte SERVIDOR_ESTADO = Constantes.SERVIDOR_OFFLINE;
 	public static int[] LOTERIA_BOLETOS = new int[10000];
 	public static int SIG_ID_LINEA_MERCADILLO, SIG_ID_OBJETO, SIG_ID_PERSONAJE, SIG_ID_MONTURA = -101,
-	SIG_ID_RECAUDADOR = -100, SIG_ID_PRISMA = -102, CANT_SALVANDO, TOTAL_SALVADO, SEGUNDOS_INICIO_KOLISEO, DIA_DEL_AO;
+	SIG_ID_RECAUDADOR = -100, SIG_ID_PRISMA = -102, CANT_SALVANDO, TOTAL_SALVADO, SEGUNDOS_INICIO_KOLISEO, DIA_DEL_AÑO;
 	public static byte MOB_EVENTO;
 	public static long SEG_CUENTA_REGRESIVA, MINUTOS_VIDA_REAL;
 	public static String LIDER_RANKING = "Ninguno", MSJ_CUENTA_REGRESIVA = "", LISTA_GFX = "", LISTA_NIVEL = "",
@@ -222,7 +222,7 @@ public class Mundo {
 				ZAAPIS_BRAKMAR.add(Short.parseShort(s));
 			} catch (Exception e) {}
 		}
-		DIA_DEL_AO = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
+		DIA_DEL_AÑO = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
 		MINUTOS_VIDA_REAL = Constantes.getTiempoActualEscala(1000 * 60);
 		SEGUNDOS_INICIO_KOLISEO = MainServidor.SEGUNDOS_INICIAR_KOLISEO;
 		System.out.println("===========> Database Static <===========");
@@ -506,7 +506,7 @@ public class Mundo {
 					if (s.length() > 0) {
 						s.append(", ");
 					}
-					s.append("" + i + "x" + b[1]);
+					s.append("°" + i + "x" + b[1]);
 					if (s2.length() > 0) {
 						s2.append("!");
 					}
@@ -536,7 +536,7 @@ public class Mundo {
 	}
 	
 	public static Almanax getAlmanaxDelDia() {
-		return ALMANAX.get(DIA_DEL_AO);
+		return ALMANAX.get(DIA_DEL_AÑO);
 	}
 	
 	public static Clase getClase(int clase) {
@@ -1296,7 +1296,7 @@ public class Mundo {
 			SEG_CUENTA_REGRESIVA = 600;
 			MSJ_CUENTA_REGRESIVA = "LOTERIA";
 			VENDER_BOLETOS = true;
-			GestorSalida.ENVIAR_L_BOTON_LOTERIA_TODOS(true);
+			GestorSalida.ENVIAR_ÑL_BOTON_LOTERIA_TODOS(true);
 			GestorSalida.ENVIAR_bRI_INICIAR_CUENTA_REGRESIVA_TODOS();
 			GestorSalida.ENVIAR_Im_INFORMACION_A_TODOS("1PLUS_TIME_SORTEO");
 			return;
@@ -1447,7 +1447,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidorln("Salvando los mercantes: ");
@@ -1466,7 +1466,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando los prismas: ");
@@ -1478,7 +1478,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando los gremios: ");
@@ -1490,7 +1490,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando los recaudadores: ");
@@ -1505,7 +1505,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando los cercados: ");
@@ -1517,7 +1517,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando las monturas: ");
@@ -1531,7 +1531,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando las casas: ");
@@ -1543,7 +1543,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando los cofres: ");
@@ -1555,7 +1555,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando los rankings PVP: ");
@@ -1567,7 +1567,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando los rankings Koliseo: ");
@@ -1579,7 +1579,7 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
 			CANT_SALVANDO = 0;
 			MainServidor.redactarLogServidor("Salvando las cuentas: ");
@@ -1593,9 +1593,9 @@ public class Mundo {
 					e.printStackTrace();
 				}
 			}
-			MainServidor.redactarLogServidorln("Finaliz con " + CANT_SALVANDO);
+			MainServidor.redactarLogServidorln("Finalizó con " + CANT_SALVANDO);
 			TOTAL_SALVADO += CANT_SALVANDO;
-			MainServidor.redactarLogServidorln("------------ Se salv exitosamente el servidor 100% ------------");
+			MainServidor.redactarLogServidorln("------------ Se salvó exitosamente el servidor 100% ------------");
 		} catch (final ConcurrentModificationException e) {
 			MainServidor.redactarLogServidorln("------------ Ocurrio un error de concurrent " + e.toString());
 			e.printStackTrace();
@@ -1674,7 +1674,8 @@ public class Mundo {
 		CANT_SALVANDO = 0;
 		MainServidor.redactarLogServidor("Salvando las estrellas de los mobs: ");
 		GestorSQL.VACIAR_MAPAS_ESTRELLAS();
-		PreparedStatement declaracion = GestorSQL.GET_PREPARED_STATEMENT(conn, "REPLACE INTO `mapas_estrellas` VALUES (?,?);");
+		PreparedStatement declaracion = (PreparedStatement) GestorSQL.GET_STATEMENT_SQL_DINAMICA(
+		"REPLACE INTO `mapas_estrellas` VALUES (?,?);");
 		for (final Mapa mapa : MAPAS.values()) {
 			if (mapa.getGrupoMobsTotales().isEmpty()) {
 				continue;
@@ -2382,7 +2383,7 @@ public class Mundo {
 			if (casa != null)
 				casa.resetear();
 			for (final Cercado cercado : CERCADOS.values()) {
-				if (cercado.getDueoID() == perso.getID()) {
+				if (cercado.getDueñoID() == perso.getID()) {
 					final String[] criando = cercado.strPavosCriando().split(";");
 					for (final String pavo : criando) {
 						try {
@@ -2582,7 +2583,7 @@ public class Mundo {
 				case Constantes.OBJETO_TIPO_ESPADA :
 				case Constantes.OBJETO_TIPO_ARCO :
 				case Constantes.OBJETO_TIPO_MARTILLO :
-				case Constantes.OBJETO_TIPO_GUADAA :
+				case Constantes.OBJETO_TIPO_GUADAÑA :
 				case Constantes.OBJETO_TIPO_DAGAS :
 					obj.convertirStringAStats(obj.getObjModelo().generarStatsModelo(CAPACIDAD_STATS.MAXIMO));
 					// obj._reseteado = true;

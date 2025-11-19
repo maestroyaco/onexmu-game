@@ -83,9 +83,10 @@ public class Mapa {
 		_alto = alto;
 		_X = X;
 		_Y = Y;
+		_key = key;  // AGREGAR ESTA LÍNEA  CLIENTE 1.43.7
 		if (MainServidor.MODO_DEBUG) {
 			System.out.println("  --> Descifrando MapData ID " + _id + " con key " + key);
-		}
+		}		
 		if (!key.trim().isEmpty()) {
 			mapData = Encriptador.decifrarMapData(key, mapData);
 		}
@@ -592,9 +593,14 @@ public class Mapa {
 	// public void setKeyMap(final String key) {
 	// _key = key;
 	// }
-	public String getKey() {
-		return "";
+	
+	private String _key = "";
+	
+	public String getKey() {  
+	    return _key;  
 	}
+	
+
 	
 	public void setFecha(String fecha) {
 		_fecha = fecha;

@@ -1707,6 +1707,10 @@ public class Pelea {
 		} catch (final Exception e) {}
 		GestorSalida.ENVIAR_GTS_INICIO_TURNO_PELEA(this, 7, _luchadorDeTurno.getID(), (MainServidor.SEGUNDOS_TURNO_PELEA
 		* 1000));
+		try {  
+		    Thread.sleep(250);  
+		} catch (final Exception e) {}  
+		GestorSalida.ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(this, 7, false);
 		try {
 			Thread.sleep(250);
 		} catch (final Exception e) {}
@@ -2363,7 +2367,7 @@ public class Pelea {
 					GestorSalida.ENVIAR_As_STATS_DEL_PJ(luchTurno.getPersonaje());
 				}
 				luchTurno.resetPuntos();
-				GestorSalida.ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(this, 7, true);
+				GestorSalida.ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(this, 7, false);
 				Thread.sleep(250);
 			}
 			iniciarTurno();
@@ -2556,7 +2560,7 @@ public class Pelea {
 		// }
 		_ultimoMovedorIDReto = movedor.getID();
 		_tempAccion = "Moverse";
-		GestorSalida.ENVIAR_GA_ACCION_PELEA(this, 7, 129, movedor.getID() + "", movedor.getID() + "," + (-nroCeldasMov));
+		// GestorSalida.ENVIAR_GA_ACCION_PELEA(this, 7, 129, movedor.getID() + "", movedor.getID() + "," + (-nroCeldasMov));
 		if (persoM == null) {
 			int factor = nroCeldasMov >= 4 ? 330 : 750;
 			try {
@@ -2605,7 +2609,8 @@ public class Pelea {
 		_tempAccion = "";
 		EfectoHechizo.verificaTrampas(luchador);
 		GestorSalida.ENVIAR_GAF_FINALIZAR_ACCION(perso, idLuch, -1);
-		GestorSalida.ENVIAR_GAs_PARAR_MOVIMIENTO_SPRITE(perso, idLuch);
+		GestorSalida.ENVIAR_GAs_PARAR_MOVIMIENTO_SPRITE(perso, idLuch);		  
+	     
 		return true;
 	}
 	
@@ -2738,7 +2743,7 @@ public class Pelea {
 				GestorSalida.ENVIAR_GAF_FINALIZAR_ACCION(perso, lanzador.getID(), -1);
 			}
 			if (cantObjetivos > 0) {
-				GestorSalida.ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(this, 7, true);
+				GestorSalida.ENVIAR_GTM_INFO_STATS_TODO_LUCHADORES_A_TODOS(this, 7, false);
 			}
 			if (lanzador.getIA() != null) {
 				try {

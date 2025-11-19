@@ -1776,7 +1776,8 @@ public class Personaje implements PreLuchador, Exchanger, Preguntador {
 		}
 		// solo se agrega si la pelea es null o se sale de la pelea por eso es _mapa
 		GestorSalida.ENVIAR_GM_PJ_A_MAPA(_mapa, this);
-		_celda.addPersonaje(this, true);
+		_celda.addPersonaje(this, true);		
+	   
 	}
 	private Mapa _mapaGDM;
 	

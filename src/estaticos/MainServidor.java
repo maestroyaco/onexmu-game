@@ -343,7 +343,7 @@ public class MainServidor {
 	public static int PUERTO_SINCRONIZADOR = 19999;
 	public static CopyOnWriteArrayList<String> IP_MULTISERVIDOR = new CopyOnWriteArrayList<>();// 25.91.217.194
 	public static CopyOnWriteArrayList<String> IP_PERMTIDAS = new CopyOnWriteArrayList<>();// 25.91.217.194
-	public static String IP_PUBLICA_SERVIDOR = "";
+	public static String IP_PUBLICA_SERVIDOR = "149.130.162.183";
 	public static String BD_HOST;
 	public static String BD_USUARIO;
 	public static String BD_PASS;
@@ -481,7 +481,7 @@ public class MainServidor {
 		});
 		System.out.println("ELBUSTEMU " + Constantes.VERSION_EMULADOR);
 		System.out.println("Creado por Elbusta solo para Dofus");
-		System.out.println("Modificado por Faurte");
+		System.out.println("Modificado por Maestro-Yaco Para Onesv.fun");
 		System.out.println("Gracias Elbusta, % trabajo 256 MB = 1000 Mapas\n");
 		// cargando la config
 		System.out.println("Cargando la configuración");

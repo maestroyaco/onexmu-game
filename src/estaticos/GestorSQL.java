@@ -62,7 +62,7 @@ import variables.zotros.TiendaCategoria;
 import variables.zotros.TiendaObjetos;
 import variables.zotros.Titulo;
 import variables.zotros.Tutorial;
-import com.mysql.jdbc.PreparedStatement;
+import java.sql.PreparedStatement;
 import estaticos.Mundo.Duo;
 import estaticos.Mundo.Experiencia;
 //import java.util.Timer;
@@ -107,31 +107,31 @@ public class GestorSQL {
 		e.printStackTrace();
 		System.exit(1);
 	}
-	
+
 	private static void exceptionNormal(Exception e, String metodo) {
 		MainServidor.redactarLogServidorln("EXCEP NORMAL SQL " + metodo + ": " + e.toString());
 		e.printStackTrace();
 	}
-	
+
 	private static void exceptionModify(Exception e, String consultaSQL, String metodo) {
 		MainServidor.redactarLogServidorln("EXCEP MODIFY SQL " + metodo + ": " + e.toString());
 		MainServidor.redactarLogServidorln("LINEA MODIFY SQL " + metodo + ": " + consultaSQL);
 		e.printStackTrace();
 	}
-	
-	public static ResultSet consultaSQL(final String consultaSQL, final Connection coneccion) throws Exception {
-		final PreparedStatement declaracion = (PreparedStatement) coneccion.prepareStatement(consultaSQL);
+
+	public static ResultSet consultaSQL(final String consultaSQL, final Connection conexion) throws Exception {
+		final PreparedStatement declaracion = conexion.prepareStatement(consultaSQL);  // âœ… sin cast
+		declaracion.setQueryTimeout(300); 
 		final ResultSet resultado = declaracion.executeQuery();
-		declaracion.setQueryTimeout(300);
 		return resultado;
 	}
-	
+
 	public static PreparedStatement transaccionSQL(final String consultaSQL, final Connection conexion) throws Exception {
-		final PreparedStatement declaracion = (PreparedStatement) conexion.prepareStatement(consultaSQL);
+		final PreparedStatement declaracion = conexion.prepareStatement(consultaSQL);  // âœ… sin cast
 		_necesitaCommit = true;
 		return declaracion;
 	}
-	
+
 	private static int ejecutarTransaccion(PreparedStatement declaracion) {
 		int ejecutar = 0;
 		try {
@@ -144,6 +144,7 @@ public class GestorSQL {
 		LOG_SQL.append(System.currentTimeMillis() + " " + str.substring(str.indexOf(":")) + "\n");
 		return ejecutar;
 	}
+
 	
 	public static void ejecutarBatch(PreparedStatement declaracion) {
 		try {
@@ -181,30 +182,49 @@ public class GestorSQL {
 			_timerComienzo.cancel();
 		}
 	}
-	
+	// Edit by Maestro-yaco para usar MYSQL en Linux VPS
 	public static final boolean iniciarConexion() {
-		try {
-			_bdDinamica = DriverManager.getConnection("jdbc:mysql://" + MainServidor.BD_HOST + "/" + MainServidor.BD_DINAMICA
-			+ "?autoReconnect=true", MainServidor.BD_USUARIO, MainServidor.BD_PASS);
-			_bdDinamica.setAutoCommit(MainServidor.PARAM_AUTO_COMMIT);
-			_bdEstatica = DriverManager.getConnection("jdbc:mysql://" + MainServidor.BD_HOST + "/" + MainServidor.BD_ESTATICA
-			+ "?autoReconnect=true", MainServidor.BD_USUARIO, MainServidor.BD_PASS);
-			_bdEstatica.setAutoCommit(MainServidor.PARAM_AUTO_COMMIT);
-			_bdCuentas = DriverManager.getConnection("jdbc:mysql://" + MainServidor.BD_HOST + "/" + MainServidor.BD_CUENTAS
-			+ "?autoReconnect=true", MainServidor.BD_USUARIO, MainServidor.BD_PASS);
-			_bdCuentas.setAutoCommit(MainServidor.PARAM_AUTO_COMMIT);
-			if (!_bdEstatica.isValid(1000) || !_bdDinamica.isValid(1000) || !_bdCuentas.isValid(1000)) {
-				MainServidor.redactarLogServidorln("SQLError : Conexion a la BDD invalida");
-				return false;
-			}
-			timerCommit(true);
-			return true;
-		} catch (final Exception e) {
-			MainServidor.redactarLogServidorln("ERROR SQL INICIAR CONEXION: " + e.toString());
-			e.printStackTrace();
-		}
-		return false;
+	    try {
+	        // Registrar el driver actualizado
+	        Class.forName("com.mysql.cj.jdbc.Driver");
+
+	        _bdDinamica = DriverManager.getConnection(
+	            "jdbc:mysql://" + MainServidor.BD_HOST + "/" + MainServidor.BD_DINAMICA
+	            + "?autoReconnect=true&useSSL=false&serverTimezone=UTC",
+	            MainServidor.BD_USUARIO,
+	            MainServidor.BD_PASS
+	        );
+	        _bdDinamica.setAutoCommit(MainServidor.PARAM_AUTO_COMMIT);
+
+	        _bdEstatica = DriverManager.getConnection(
+	            "jdbc:mysql://" + MainServidor.BD_HOST + "/" + MainServidor.BD_ESTATICA
+	            + "?autoReconnect=true&useSSL=false&serverTimezone=UTC",
+	            MainServidor.BD_USUARIO,
+	            MainServidor.BD_PASS
+	        );
+	        _bdEstatica.setAutoCommit(MainServidor.PARAM_AUTO_COMMIT);
+
+	        _bdCuentas = DriverManager.getConnection(
+	            "jdbc:mysql://" + MainServidor.BD_HOST + "/" + MainServidor.BD_CUENTAS
+	            + "?autoReconnect=true&useSSL=false&serverTimezone=UTC",
+	            MainServidor.BD_USUARIO,
+	            MainServidor.BD_PASS
+	        );
+	        _bdCuentas.setAutoCommit(MainServidor.PARAM_AUTO_COMMIT);
+
+	        if (!_bdEstatica.isValid(2) || !_bdDinamica.isValid(2) || !_bdCuentas.isValid(2)) {
+	            MainServidor.redactarLogServidorln("SQLError : Conexion a la BDD invalida");
+	            return false;
+	        }
+	        timerCommit(true);
+	        return true;
+	    } catch (final Exception e) {
+	        MainServidor.redactarLogServidorln("ERROR SQL INICIAR CONEXION: " + e.toString());
+	        e.printStackTrace();
+	    }
+	    return false;
 	}
+
 	
 	public static final String conexionAlterna(String host, String database, String user, String pass) {
 		try {
@@ -278,7 +298,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `ip` FROM `banip` WHERE `ip` = '" + ip + "';";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				b = true;
 			}
 			cerrarResultado(resultado);
@@ -393,7 +413,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `idWeb` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				str = resultado.getInt("idWeb");
 			}
 			cerrarResultado(resultado);
@@ -408,7 +428,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `apodo` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				str = resultado.getString("apodo");
 			}
 			cerrarResultado(resultado);
@@ -423,7 +443,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `abono` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				l = resultado.getLong("abono");
 			}
 			cerrarResultado(resultado);
@@ -452,7 +472,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `ogrinas` FROM `cuentas` WHERE `id` = '" + cuentaID + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				i = resultado.getInt("ogrinas");
 			}
 			cerrarResultado(resultado);
@@ -507,7 +527,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `creditos` FROM `cuentas` WHERE `id` = '" + cuentaID + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				i = resultado.getInt("creditos");
 			}
 			cerrarResultado(resultado);
@@ -653,14 +673,14 @@ public class GestorSQL {
 		return false;
 	}
 	
-	public static String GET_CONTRASEÑA_CUENTA(final String cuenta) {
+	public static String GET_CONTRASEÃ‘A_CUENTA(final String cuenta) {
 		String str = "";
-		String consultaSQL = "SELECT `contraseña` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
+		String consultaSQL = "SELECT `contraseÃ±a` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				try {
-					str = resultado.getString("contraseña");
+					str = resultado.getString("contraseÃ±a");
 				} catch (final Exception e) {}
 			}
 			cerrarResultado(resultado);
@@ -670,11 +690,11 @@ public class GestorSQL {
 		return str;
 	}
 	
-	public static void CAMBIAR_CONTRASEÑA_CUENTA(final String contraseña, final int cuentaID) {
-		String consultaSQL = "UPDATE `cuentas` SET `contraseña`= ? WHERE `id`= ?";
+	public static void CAMBIAR_CONTRASEÃ‘A_CUENTA(final String contraseÃ±a, final int cuentaID) {
+		String consultaSQL = "UPDATE `cuentas` SET `contraseÃ±a`= ? WHERE `id`= ?";
 		try {
 			final PreparedStatement declaracion = transaccionSQL(consultaSQL, _bdCuentas);
-			declaracion.setString(1, contraseña);
+			declaracion.setString(1, contraseÃ±a);
 			declaracion.setInt(2, cuentaID);
 			ejecutarTransaccion(declaracion);
 			cerrarDeclaracion(declaracion);
@@ -688,7 +708,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `pregunta` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				try {
 					str = resultado.getString("pregunta");
 				} catch (final Exception e) {}
@@ -705,7 +725,7 @@ public class GestorSQL {
 		try {
 			String consultaSQL = "SELECT `baneado` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				i = resultado.getLong("baneado");
 			}
 			cerrarResultado(resultado);
@@ -720,7 +740,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `respuesta` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				try {
 					str = resultado.getString("respuesta");
 				} catch (final Exception e) {}
@@ -818,7 +838,7 @@ public class GestorSQL {
 				return;
 			}
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				Cuenta cuenta = new Cuenta(resultado.getInt("id"), resultado.getString("cuenta"));
 				Mundo.addCuenta(cuenta);
 				REPLACE_CUENTA_SERVIDOR(cuenta, (byte) 1);
@@ -847,7 +867,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `regalo` FROM `cuentas_servidor` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdDinamica);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				try {
 					str = resultado.getString("regalo");
 				} catch (final Exception e) {}
@@ -905,7 +925,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `votos` FROM `cuentas` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdCuentas);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				try {
 					i = resultado.getInt("votos");
 				} catch (final Exception e) {}
@@ -966,7 +986,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT `primeraVez` FROM `cuentas_servidor` WHERE `cuenta` = '" + cuenta + "' ;";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdDinamica);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				try {
 					b = resultado.getByte("primeraVez");
 				} catch (final Exception e) {}
@@ -1181,7 +1201,7 @@ public class GestorSQL {
 		int id = 1;
 		try {
 			final ResultSet resultado = consultaSQL("SELECT MAX(id) AS max FROM `objetos`;", _bdDinamica);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				id = resultado.getInt("max");
 			}
 			cerrarResultado(resultado);
@@ -1477,7 +1497,7 @@ public class GestorSQL {
 			final ResultSet resultado = consultaSQL("SELECT * FROM `casas`;", _bdDinamica);
 			while (resultado.next()) {
 				try {
-					Mundo.getCasa(resultado.getInt("id")).actualizarCasa(resultado.getInt("dueño"), resultado.getInt("precio"),
+					Mundo.getCasa(resultado.getInt("id")).actualizarCasa(resultado.getInt("dueÃ±o"), resultado.getInt("precio"),
 					resultado.getByte("bloqueado"), resultado.getString("clave"), resultado.getInt("derechosGremio"));
 				} catch (Exception e) {}
 			}
@@ -1659,14 +1679,14 @@ public class GestorSQL {
 			while (resultado.next()) {
 				final Mercadillo puesto = Mundo.getPuestoMercadillo(resultado.getInt("mercadillo"));
 				Objeto objeto = Mundo.getObjeto(resultado.getInt("objeto"));
-				if (puesto == null || objeto == null || objeto.getDueñoTemp() != 0) {
+				if (puesto == null || objeto == null || objeto.getDueÃ±oTemp() != 0) {
 					MainServidor.redactarLogServidorln("Se borro el objeto mercadillo id:" + resultado.getInt("objeto")
-					+ ", dueño: " + resultado.getInt("dueño"));
+					+ ", dueÃ±o: " + resultado.getInt("dueÃ±o"));
 					DELETE_OBJ_MERCADILLO(resultado.getInt("objeto"));
 					continue;
 				}
 				puesto.addObjMercaAlPuesto(new ObjetoMercadillo(resultado.getInt("precio"), resultado.getByte("cantidad"),
-				resultado.getInt("dueño"), objeto, puesto.getID()));
+				resultado.getInt("dueÃ±o"), objeto, puesto.getID()));
 				num++;
 			}
 			cerrarResultado(resultado);
@@ -1689,7 +1709,7 @@ public class GestorSQL {
 				.getShort("celda"), resultado.getByte("orientacion"), resultado.getInt("gremio"), resultado.getString(
 				"nombre1"), resultado.getString("nombre2"), resultado.getString("objetos"), resultado.getLong("kamas"),
 				resultado.getLong("xp"), resultado.getLong("tiempoProteccion"), resultado.getLong("tiempoCreacion"), resultado
-				.getInt("dueño"));
+				.getInt("dueÃ±o"));
 				Mundo.addRecaudador(recaudador);
 				numero++;
 			}
@@ -2168,7 +2188,7 @@ public class GestorSQL {
 				resultado.getString("nombre"), resultado.getInt("fatiga"), resultado.getInt("energia"), resultado.getByte(
 				"reproducciones"), resultado.getInt("madurez"), resultado.getInt("serenidad"), resultado.getString("objetos"),
 				resultado.getString("ancestros"), resultado.getString("habilidad"), resultado.getByte("talla"), resultado
-				.getShort("celda"), resultado.getShort("mapa"), resultado.getInt("dueño"), resultado.getByte("orientacion"),
+				.getShort("celda"), resultado.getShort("mapa"), resultado.getInt("dueÃ±o"), resultado.getByte("orientacion"),
 				resultado.getLong("fecundable"), resultado.getInt("pareja"), resultado.getByte("salvaje")), false);
 			}
 			cerrarResultado(resultado);
@@ -2391,7 +2411,7 @@ public class GestorSQL {
 			while (resultado.next()) {
 				try {
 					Mundo.getCofre(resultado.getInt("id")).actualizarCofre(resultado.getString("objetos"), resultado.getLong(
-					"kamas"), resultado.getString("clave"), resultado.getInt("dueño"));
+					"kamas"), resultado.getString("clave"), resultado.getInt("dueÃ±o"));
 				} catch (Exception e) {}
 			}
 			cerrarResultado(resultado);
@@ -2644,7 +2664,7 @@ public class GestorSQL {
 		String consultaSQL = "SELECT * FROM `cofres_modelo` WHERE `mapa` = '" + mapa + "' AND `celda` = '" + celda + "';";
 		try {
 			final ResultSet resultado = consultaSQL(consultaSQL, _bdEstatica);
-			if (resultado.first()) {
+			if (resultado.next()) {
 				id = resultado.getInt("id");
 			}
 			cerrarResultado(resultado);
@@ -2665,7 +2685,7 @@ public class GestorSQL {
 			declaracion.setString(2, cofre.analizarObjetoCofreABD());
 			declaracion.setLong(3, cofre.getKamas());
 			declaracion.setString(4, cofre.getClave());
-			declaracion.setInt(5, cofre.getDueñoID());
+			declaracion.setInt(5, cofre.getDueÃ±oID());
 			ejecutarTransaccion(declaracion);
 			cerrarDeclaracion(declaracion);
 			if (salvarObjetos) {
@@ -3221,7 +3241,7 @@ public class GestorSQL {
 			declaracion.setInt(18, montura.getOrientacion());
 			declaracion.setInt(19, montura.getCelda() == null ? -1 : montura.getCelda().getID());
 			declaracion.setInt(20, montura.getMapa() == null ? -1 : montura.getMapa().getID());
-			declaracion.setInt(21, montura.getDueñoID());
+			declaracion.setInt(21, montura.getDueÃ±oID());
 			declaracion.setLong(22, montura.getTiempoFecundacion());
 			declaracion.setInt(23, montura.getParejaID());
 			declaracion.setString(24, montura.esSalvaje() ? "1" : "0");
@@ -3254,7 +3274,7 @@ public class GestorSQL {
 		try {
 			PreparedStatement declaracion = transaccionSQL(consultaSQL, _bdDinamica);
 			declaracion.setInt(1, cercado.getMapa().getID());
-			declaracion.setInt(2, cercado.getDueñoID());
+			declaracion.setInt(2, cercado.getDueÃ±oID());
 			declaracion.setInt(3, cercado.getGremio() == null ? -1 : cercado.getGremio().getID());
 			declaracion.setInt(4, cercado.getPrecioPJ());
 			declaracion.setString(5, cercado.strPavosCriando());
@@ -3717,7 +3737,7 @@ public class GestorSQL {
 			declaracion.setLong(9, recaudador.getKamas());
 			declaracion.setLong(10, recaudador.getExp());
 			declaracion.setLong(11, recaudador.getTiempoProteccion());
-			declaracion.setInt(12, recaudador.getDueño());
+			declaracion.setInt(12, recaudador.getDueÃ±o());
 			declaracion.setLong(13, recaudador.getTiempoCreacion());
 			ejecutarTransaccion(declaracion);
 			cerrarDeclaracion(declaracion);
@@ -3983,7 +4003,7 @@ public class GestorSQL {
 		try {
 			final PreparedStatement declaracion = transaccionSQL(consultaSQL, _bdDinamica);
 			declaracion.setInt(1, casa.getID());
-			declaracion.setInt(2, casa.getDueño() != null ? casa.getDueño().getID() : 0);
+			declaracion.setInt(2, casa.getDueÃ±o() != null ? casa.getDueÃ±o().getID() : 0);
 			declaracion.setLong(3, casa.getKamasVenta());
 			declaracion.setByte(4, (byte) (casa.getActParametros() ? 1 : 0));
 			declaracion.setString(5, casa.getClave());
@@ -4018,7 +4038,7 @@ public class GestorSQL {
 	}
 	
 	public static boolean REPLACE_OBJETO_MERCADILLO(final ObjetoMercadillo objMerca) {
-		String consultaSQL = "REPLACE INTO `mercadillo_objetos` (`objeto`,`mercadillo`,`cantidad`,`dueño`,`precio`) VALUES (?,?,?,?,?);";
+		String consultaSQL = "REPLACE INTO `mercadillo_objetos` (`objeto`,`mercadillo`,`cantidad`,`dueÃ±o`,`precio`) VALUES (?,?,?,?,?);";
 		try {
 			PreparedStatement declaracion = transaccionSQL(consultaSQL, _bdDinamica);
 			if (objMerca.getCuentaID() == 0) {
@@ -4336,7 +4356,7 @@ public class GestorSQL {
 				Personaje perso = Mundo.getPersonaje(resultado.getInt("idPersonaje"));
 				if (perso != null) {
 					perso.addObjetoConOAKO(objNew, true);
-					GestorSalida.ENVIAR_Im1223_MENSAJE_IMBORRABLE(perso, "Vous avez reçu " + resultado.getInt("cantidad") + " "
+					GestorSalida.ENVIAR_Im1223_MENSAJE_IMBORRABLE(perso, "Vous avez reÃ§u " + resultado.getInt("cantidad") + " "
 					+ resultado.getString("nombreObjeto"));
 				}
 			}

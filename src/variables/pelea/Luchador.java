@@ -780,52 +780,105 @@ public class Luchador {
 	}
 	
 	public String stringGM(int idMirador) {
-		final StringBuilder str = new StringBuilder();
-		str.append((idMirador != 0 && esInvisible(idMirador) ? 0 : _celda.getID()) + ";");
-		str.append(Camino.getIndexPorDireccion(getDireccion()) + ";");// direccion
-		str.append("0" + "^" + _esAbonado + ";");// estrellas bonus
-		str.append(_idLuch + ";");
-		str.append(_nombre + "^" + _colorNombre + ";");
-		str.append(getPreLuchador().stringGMLuchador());// ex _strGMLuchador
-		str.append(getPDVConBuff() + ";");
-		str.append(_totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PA) + ";");// PA
-		str.append(_totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PM) + ";");// PM
-		String resist = "";
-		switch (_pelea.getTipoPelea()) {
-			case Constantes.PELEA_TIPO_DESAFIO :
-			case Constantes.PELEA_TIPO_KOLISEO :
-			case Constantes.PELEA_TIPO_PVP :
-			case Constantes.PELEA_TIPO_RECAUDADOR :
-				resist = Constantes.STAT_MAS_RES_PORC_PVP_NEUTRAL + "," + Constantes.STAT_MAS_RES_PORC_PVP_TIERRA + ","
-				+ Constantes.STAT_MAS_RES_PORC_PVP_FUEGO + "," + Constantes.STAT_MAS_RES_PORC_PVP_AGUA + ","
-				+ Constantes.STAT_MAS_RES_PORC_PVP_AIRE;
-				break;
-			default :
-				resist = Constantes.STAT_MAS_RES_PORC_NEUTRAL + "," + Constantes.STAT_MAS_RES_PORC_TIERRA + ","
-				+ Constantes.STAT_MAS_RES_PORC_FUEGO + "," + Constantes.STAT_MAS_RES_PORC_AGUA + ","
-				+ Constantes.STAT_MAS_RES_PORC_AIRE;
-				break;
-		}
-		resist += "," + Constantes.STAT_MAS_ESQUIVA_PERD_PA + "," + Constantes.STAT_MAS_ESQUIVA_PERD_PM;
-		for (String r : resist.split(",")) {
-			int statID = Integer.parseInt(r);
-			int total = _totalStats.getTotalStatConComplemento(statID);
-			str.append(total + ";");
-		}
-		str.append(_equipoBin + ";");
-		Personaje perso = null;
-		if (getPreLuchador().getClass() == Personaje.class) {
-			perso = (Personaje) getPreLuchador();
-		}
-		if (perso != null) {
-			if (perso.estaMontando() && perso.getMontura() != null) {
-				str.append(perso.getMontura().getStringColor(perso.stringColor()));
-			}
-			str.append(";");
-		}
-		str.append(_totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_HUIDA) + ";");
-		str.append(_totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_PLACAJE) + ";");
-		return str.toString();
+	    final StringBuilder str = new StringBuilder();
+
+	    // ID de celda, considerando si el luchador es invisible para el mirador.
+	    str.append(idMirador != 0 && esInvisible(idMirador) ? 0 : _celda.getID()).append(";");
+	    
+	    // Dirección del luchador.
+	    str.append(Camino.getIndexPorDireccion(getDireccion())).append(";");
+	    
+	    // Estrellas de bonus y estado de abonado.
+	    str.append("0" + "^" + _esAbonado).append(";");
+	    
+	    // ID y nombre del luchador con su color.
+	    str.append(_idLuch).append(";");
+	    str.append(_nombre).append("^").append(_colorNombre).append(";");
+	    
+	    // Información gráfica del luchador (skin, tamaño, etc.).
+	    str.append(getPreLuchador().stringGMLuchador());
+	    
+	    // Puntos de vida (PDV), Puntos de Acción (PA) y Puntos de Movimiento (PM) actuales.
+	    str.append(getPDVConBuff()).append(";");       // Vida actual (LP)
+	    str.append(getPARestantes()).append(";");      // PA actuales (AP)
+	    str.append(getPMRestantes()).append(";");      // PM actuales (MP)
+	    
+	    // Cálculo y formato de las resistencias (PVP o PVM).
+	    str.append(getResistenciasFormateadas()).append(";");
+
+	    // Equipo del luchador (formato binario).
+	    str.append(_equipoBin).append(";");
+	    
+	    // Apariencia de la montura si el luchador es un personaje y está montando.
+	    appendInfoMontura(str);
+	    
+	    // Estadísticas de Huida y Placaje.
+	    str.append(_totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_HUIDA)).append(";");
+	    str.append(_totalStats.getTotalStatConComplemento(Constantes.STAT_MAS_PLACAJE)).append(";");
+	    str.append(_totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PA) + ";");  // APinit  
+	    str.append(_totalStats.getTotalStatParaMostrar(Constantes.STAT_MAS_PM));        // MPinit  
+
+
+	    // Vida máxima (LPmax) al final de la cadena.
+	    str.append(getPDVMaxConBuff());
+
+	    return str.toString();
+	}
+
+	/**
+	 * Determina y formatea la cadena de resistencias según el tipo de pelea (PvP o PvM).
+	 * @return Una cadena con las 7 resistencias separadas por comas.
+	 */
+	private String getResistenciasFormateadas() {
+	    boolean esPVP = esPeleaPVP();
+	    int[] statsResistencias = {
+	        esPVP ? Constantes.STAT_MAS_RES_PORC_PVP_NEUTRAL : Constantes.STAT_MAS_RES_PORC_NEUTRAL,
+	        esPVP ? Constantes.STAT_MAS_RES_PORC_PVP_TIERRA : Constantes.STAT_MAS_RES_PORC_TIERRA,
+	        esPVP ? Constantes.STAT_MAS_RES_PORC_PVP_FUEGO : Constantes.STAT_MAS_RES_PORC_FUEGO,
+	        esPVP ? Constantes.STAT_MAS_RES_PORC_PVP_AGUA : Constantes.STAT_MAS_RES_PORC_AGUA,
+	        esPVP ? Constantes.STAT_MAS_RES_PORC_PVP_AIRE : Constantes.STAT_MAS_RES_PORC_AIRE,
+	        Constantes.STAT_MAS_ESQUIVA_PERD_PA,
+	        Constantes.STAT_MAS_ESQUIVA_PERD_PM
+	    };
+
+	    StringBuilder resistStr = new StringBuilder();
+	    for (int i = 0; i < statsResistencias.length; i++) {
+	        resistStr.append(_totalStats.getTotalStatConComplemento(statsResistencias[i]));
+	        if (i < statsResistencias.length - 1) {
+	            resistStr.append(",");
+	        }
+	    }
+	    return resistStr.toString();
+	}
+
+	/**
+	 * Verifica si la pelea actual es de tipo PvP.
+	 * @return true si es una pelea PvP, de lo contrario false.
+	 */
+	private boolean esPeleaPVP() {
+	    switch (_pelea.getTipoPelea()) {
+	        case Constantes.PELEA_TIPO_DESAFIO:
+	        case Constantes.PELEA_TIPO_KOLISEO:
+	        case Constantes.PELEA_TIPO_PVP:
+	        case Constantes.PELEA_TIPO_RECAUDADOR:
+	            return true;
+	        default:
+	            return false;
+	    }
+	}
+
+	/**
+	 * Añade la información de la montura a la cadena de StringBuilder si es aplicable.
+	 * @param str El StringBuilder al que se añadirá la información.
+	 */
+	private void appendInfoMontura(StringBuilder str) {
+	    if (getPreLuchador() instanceof Personaje) {
+	        Personaje perso = (Personaje) getPreLuchador();
+	        if (perso.estaMontando() && perso.getMontura() != null) {
+	            str.append(perso.getMontura().getStringColor(perso.stringColor()));
+	        }
+	    }
+	    str.append(";");
 	}
 	
 	public int getPDVMaxConBuff() {
